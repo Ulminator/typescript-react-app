@@ -30,3 +30,5 @@ const port = process.env.PORT || 8080;
 app.listen(port, () => {
   console.log(`http://localhost:8080`);
 });
+
+export default app;
