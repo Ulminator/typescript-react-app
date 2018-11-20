@@ -1,28 +1,21 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import * as React from 'react';
+import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom';
+import PostsPage from './components/PostsPage';
+import NewPostPage from './components/NewPostPage';
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
-      </div>
-    );
-  }
-}
+const Home = () => <h2><li><Link to="/posts">Posts</Link></li></h2>;
+
+const App = () => (
+  <Router>
+    <div>
+      <Switch>
+        <Route exact path="/" component={Home} />
+        <Route exact path="/posts" component={PostsPage} />
+        <Route exact path='/posts/new' component={NewPostPage}/>
+        <Route exact path='/posts/:postid' render= {({match}) =>( <div> <h3> {match.params.postid} </h3></div>)}/>
+      </Switch>
+    </div>
+  </Router>
+)
 
 export default App;
