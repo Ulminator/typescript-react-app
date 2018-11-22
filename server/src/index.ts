@@ -2,7 +2,14 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
 
+import apiRoutes from './routes'
+
 const app = express();
+
+app.use(morgan('dev'));
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -16,14 +23,7 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   }
 });
 
-app.use(morgan('dev'));
-
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: false }));
-
-app.get('/', (_req: express.Request, res: express.Response) => {
-  res.status(200).send('It works');
-});
+app.use('/api', apiRoutes);
 
 const port = process.env.PORT || 8080;
 
