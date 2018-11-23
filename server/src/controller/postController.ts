@@ -1,115 +1,75 @@
 import { Request, Response } from 'express';
-import client from '../pg/pgConnect';
+import client from '../pg/client';
+import * as queries from '../pg/queries';
+import generateInClause from '../util/generateInClause';
 
-const selectAllPostTitles = 'SELECT id, title FROM website.posts;'
-
-const selectPostById = 'SELECT id, title, image_id FROM website.posts WHERE id = $1;';
-const selectCommentsByPostId = 'SELECT id, username, content, created_at FROM website.post_comments where post_id = $1 ORDER BY created_at ASC;';
-const selectRepliesByCommentId = 'SELECT comment_id, username, content, created_at FROM website.post_comment_replies where comment_id IN';
-
-const insertNewPost = 'INSERT INTO website.posts (user_id, title, image_id) VALUES ($1, $2, $3) RETURNING id;'
-const insertNewComment = 'INSERT INTO website.post_comments (post_id, username, content) VALUES ($1, $2, $3);'
-
-const insertNewReply = 'INSERT INTO website.post_comment_replies (comment_id, username, content) VALUES ($1, $2, $3);'
-
-export async function getAllPostTitles(req: Request, res: Response) {
-  const { rows } = await client.query(selectAllPostTitles);
+export async function getPosts(_req: Request, res: Response) {
+  const { rows } = await client.query(queries.getPosts);
   res.send(rows);
-}
-
-function generateInClause(arr: number[]) {
-  let inClause = ' ( ';
-  for (let i = 1; i <= arr.length; i++) {
-    if (i == arr.length) {
-      inClause += `$${i} `;
-    } else {
-      inClause += `$${i}, `;
-    }
-  }
-  inClause += ')'
-  return inClause;
-}
+};
 
 export async function getPostById(req: Request, res: Response) {
-  // validate postid -> make sure it is an integer
+
   const { postId } = req.params;
   
-  const { rows: postRows } = await client.query(selectPostById, [postId]);
-  const { rows: comments } = await client.query(selectCommentsByPostId, [postId]);
-  //make sure comments is not null or this will break
-  let comment_ids: number[] = [];
-  // comment has any type rn
-  comments.forEach(comment => comment_ids.push(comment.id));
+  const { rows: pRows } = await client.query(queries.getPostById, [postId]);
+  const { rows: cRows } = await client.query(queries.getCommentsAndRepliesByPostId, [postId]);
 
-  let inClause = generateInClause(comment_ids) + ' ORDER BY comment_id, created_at ASC;'
-  console.log(selectRepliesByCommentId + inClause);
-  const { rows: replies } = await client.query(selectRepliesByCommentId + inClause, comment_ids);
+  let user_ids = new Set();
+  let { comments }: { comments: Comment[] } = cRows[0];
 
-  comments.forEach(comment => {
-    comment.replies = [];
-    replies.forEach(reply => {
-      if (comment.id === reply.comment_id) {
-        comment.replies.push(reply);
-      }
+  if (comments !== null) {
+    comments.forEach(comment => {
+      if (!user_ids.has(comment.user_id)) user_ids.add(comment.user_id)
+      comment.replies.forEach(reply => {
+        if (!user_ids.has(reply.user_id)) user_ids.add(reply.user_id)
+      });
     });
-  });
-
-  const reply: GetPostByIdReply = {
-    id: postRows[0].id,
-    title: postRows[0].title,
-    image_id: postRows[0].image_id,
-    comments
-  };
-
-  res.send(reply);
-}
-
-interface Reply { comment_id: number, username: string, content: string, created_at: Date }
-interface Comment { id: number, username: string, content: string, created_at: Date, replies: Reply[] }
-interface GetPostByIdReply { id: number, title: string, image_id: number, comments: Comment[] }
-
-// must create a row on website.posts and website.post_comments
-export async function createNewPost(req: Request, res: Response) {
-  // validate post body
-
-  // generate unique id on frontend for image, upload it to gcs, send image_id along with post to this function
-  const { body } = req;
-  const { title, image_id, user_id, username, content } = body;
-
-  try {
-    const { rows } = await client.query(insertNewPost, [user_id, title, image_id]);
-    const { id } = rows[0];
-
-    client.query(insertNewComment, [id, username, content]).then(() => res.status(200).send());
-  } catch (err) {
-    console.log(err);
-    res.status(500).send({});
+  
+    const { rows: uRows }: { rows: Row[] } = await client.query(queries.getUsernamesById + generateInClause([...user_ids]), [...user_ids]);
+    const idUsernameMap: IHash = {};
+    uRows.forEach(row => idUsernameMap[row.id] = row.username);
+  
+    comments.forEach(comment => {
+      comment.username = idUsernameMap[comment.user_id];
+      comment.replies.forEach(reply => {
+        reply.username = idUsernameMap[reply.user_id];
+      });
+    });
+  } else {
+    comments = [];
   }
-}
 
-export async function createNewComment(req: Request, res: Response) {
+  res.send({ id: pRows[0].id, title: pRows[0].title, image_id: pRows[0].image_id, comments });
+};
 
-  const { body } = req;
-  const { post_id, username, content } = body;
+interface Row { id: string, username: string }
+interface IHash { [details: string]: string};
+interface Reply { reply_id: number, user_id: string, content: string, created_at: Date, username: string }
+interface Comment { comment_id: number, user_id: string, content: string, created_at: Date, replies: Reply[], username: string }
 
-  client.query(insertNewComment, [post_id, username, content])
+export async function postPostsComment(req: Request, res: Response) {
+
+  const { postId } = req.params;
+  const { userId, content } = req.body;
+
+  client.query(queries.postPostsComment, [postId, userId, content])
         .then(() => res.status(200).send())
         .catch(err => {
           console.log(err);
           res.status(500).send({});
         });
+};
 
-}
+export async function postsPostsCommentsReply(req: Request, res: Response) {
 
-export async function createNewReply(req: Request, res: Response) {
+  const { commentId } = req.params;
+  const { userId, content } = req.body;
 
-  const { body } = req;
-  const { comment_id, username, content } = body;
-
-  try {
-    client.query(insertNewReply, [comment_id, username, content]).then(() => res.status(200).send());
-  } catch (err) {
-    console.log(err);
-    res.status(500).send({});
-  }
-}
+  client.query(queries.postsPostsCommentsReply, [commentId, userId, content])
+        .then(() => res.status(200).send())
+        .catch(err => {
+          console.log(err);
+          res.status(500).send({});
+        });
+};

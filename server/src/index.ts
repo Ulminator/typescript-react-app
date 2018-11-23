@@ -25,10 +25,10 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 
 app.use('/api', apiRoutes);
 
-const port = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
 
-app.listen(port, () => {
-  console.log(`http://localhost:8080`);
+app.listen(PORT, () => {
+  console.log(`http://localhost:${PORT}`);
 });
 
 export default app;
