@@ -9,11 +9,10 @@ interface PostsProps {
   match: match
 }
 
-interface listing { title: string; id: number }
-const initialState = { listings: [{ title: 'connected', id: 1 }] };
+interface Listing { id: number; title: string; user_id: number, image_id: number, created_at: Date }
 
-// const initialState = { listings: [] as listing[] };
-// const initialState = { listings: new Array<listing>() };
+const initialState: { listings: Listing[] } = { listings: [] };
+
 type State = Readonly<typeof initialState>
 
 class PostsPage extends React.Component<PostsProps, State> {
@@ -22,8 +21,9 @@ class PostsPage extends React.Component<PostsProps, State> {
   componentDidMount() {
     const baseUrl = 'http://localhost:8080';
 
-    axios.get(`${baseUrl}/api/getListings`)
+    axios.get(`${baseUrl}/api/posts`)
       .then((res) => {
+        console.log(res.data);
         this.setState({ listings: res.data });
       })
       .catch((err) => { console.log(err); });
@@ -33,27 +33,30 @@ class PostsPage extends React.Component<PostsProps, State> {
     const { listings } = this.state;
     const { match } = this.props;
     return(
-      <div>
-        <button>
-          <Link to={`${match.url}/new`}>Create New Post</Link>
-        </button>
+      <div style={{ position: 'relative' }}>
+        <Link to={`${match.url}/new`} style={{ 
+                                        border: '2px',
+                                        borderStyle: 'solid', 
+                                        padding: '25px', 
+                                        
+                                        position: 'absolute', 
+                                        top: '10px', 
+                                        right: '25px', 
+                                        textDecoration: 'none' }}>
+          Create New Post
+        </Link>
         { listings.map(listing => <ListingCard key={listing.id} listing={listing} />)}
       </div>
     );
   }
 }
 
-// const PostsPage = ( props: PostsProps ) => {
-//   const { match } = props;
-
-//   return(
-//     <div>
-//       <button>
-//         <Link to={`${match.url}/new`}>Create New Post</Link>
-//       </button>
-
-//     </div>
-//   );
-// }
+{/* <a href={`/posts/${listingCardProps.listing.id}`} style={{ textDecoration: 'none' }}>
+<p 
+  style={{ border: '2px', borderStyle: 'solid', padding: '1em', margin: '25px' }}
+  id={`${listingCardProps.listing.id}`}>
+    {listingCardProps.listing.title}
+</p>
+</a> */}
 
 export default PostsPage;
