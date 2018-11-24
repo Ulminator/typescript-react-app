@@ -9,7 +9,7 @@ RUN cd server && npm ci
 
 COPY . .
 
-EXPOSE 8080 3000
+EXPOSE 8080
 
 ARG NODE_ENV=production
 ENV NODE_ENV ${NODE_ENV}

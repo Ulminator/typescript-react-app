@@ -8,9 +8,7 @@
     "build:server": "tsc",
     "build:client": "npm run build --prefix ../client",
     "prestart": "npm run build",
-    "start": "concurrently \"npm run server\" \"npm run client\"",
-    "server": "NODE_ENV=production node ./build/index.js",
-    "client": "serve -s ../client/build -p 3000",
+    "start": "NODE_ENV=production node ./build/index.js",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run pg:build && NODE_ENV=development nodemon src/index.ts --watch ./src --exec ts-node",
     "dev:client": "npm run start --prefix ../client",
@@ -30,7 +28,6 @@
     "express": "^4.16.4",
     "morgan": "^1.9.1",
     "pg": "^7.6.1",
-    "serve": "^10.1.1",
     "ts-node": "^7.0.1"
   },
   "devDependencies": {

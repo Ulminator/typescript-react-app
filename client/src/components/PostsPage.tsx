@@ -19,9 +19,10 @@ class PostsPage extends React.Component<PostsProps, State> {
   readonly state: State = initialState;
 
   componentDidMount() {
-    const baseUrl = 'http://localhost:8080';
+    console.log(process.env.REACT_APP_API_URL)
+    const { REACT_APP_API_URL } = process.env;
 
-    axios.get(`${baseUrl}/api/posts`)
+    axios.get(`${REACT_APP_API_URL}/posts`)
       .then((res) => {
         console.log(res.data);
         this.setState({ listings: res.data });
@@ -50,13 +51,5 @@ class PostsPage extends React.Component<PostsProps, State> {
     );
   }
 }
-
-{/* <a href={`/posts/${listingCardProps.listing.id}`} style={{ textDecoration: 'none' }}>
-<p 
-  style={{ border: '2px', borderStyle: 'solid', padding: '1em', margin: '25px' }}
-  id={`${listingCardProps.listing.id}`}>
-    {listingCardProps.listing.title}
-</p>
-</a> */}
 
 export default PostsPage;

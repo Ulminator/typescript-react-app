@@ -1,7 +1,7 @@
 echo "--CREATING DOCKERIZED POSTGRES INSTANCE--"
 docker kill pg
 docker rm -f pg
-docker run -p 5432:5432 --name pg -d postgres
+docker run -p 5432:5432 --name pg -d postgres:9.6
 
 echo "--COPYING SQL FILES--"
 docker cp ../database/ddl/createTables.sql pg:/createTables.sql

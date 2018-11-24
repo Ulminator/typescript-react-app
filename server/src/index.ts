@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import morgan from 'morgan';
+import path from 'path';
 
 import apiRoutes from './routes'
 
@@ -24,6 +25,13 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 });
 
 app.use('/api', apiRoutes);
+
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../client/build')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../../client/build/index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 8080;
 
