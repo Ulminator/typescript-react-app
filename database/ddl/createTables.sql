@@ -15,7 +15,7 @@ CREATE TABLE website.posts
   id serial NOT NULL PRIMARY KEY,
   user_id integer NOT NULL REFERENCES website.users (id),
   title text NOT NULL,
-  image_id text,
+  image_id text NOT NULL,
   created_at timestamp default now()
 );
 
@@ -33,10 +33,10 @@ CREATE TABLE website.post_comments
 
 CREATE TABLE website.post_comment_replies
 (
-    id serial PRIMARY KEY,
+    id serial NOT NULL PRIMARY KEY,
     comment_id integer NOT NULL REFERENCES website.post_comments (id),
     user_id integer NOT NULL REFERENCES website.users (id),
-    content text,
+    content text NOT NULL,
     created_at timestamp default now()
 );
 

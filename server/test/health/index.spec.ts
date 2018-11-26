@@ -1,18 +1,19 @@
 import chai from 'chai';
 import chaiHttp from 'chai-http';
 
-import app from '../src/index';
+import app from '../../src/index';
 
 const { expect } = chai;
 
 chai.use(chaiHttp);
 
-describe('GET - Base route', () => {
-  it('should GET a 200 response', (done) => {
+describe('Health Check', () => {
+  it('should be up', (done) => {
     chai.request(app)
-      .get('/')
+      .get('/api/health')
       .end((err, res) => {
         expect(res).to.have.status(200);
+        expect(res.body.status).to.equal('UP');
         done();
       });
     });

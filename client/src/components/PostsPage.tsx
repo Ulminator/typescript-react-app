@@ -19,12 +19,10 @@ class PostsPage extends React.Component<PostsProps, State> {
   readonly state: State = initialState;
 
   componentDidMount() {
-    console.log(process.env.REACT_APP_API_URL)
     const { REACT_APP_API_URL } = process.env;
 
     axios.get(`${REACT_APP_API_URL}/posts`)
       .then((res) => {
-        console.log(res.data);
         this.setState({ listings: res.data });
       })
       .catch((err) => { console.log(err); });

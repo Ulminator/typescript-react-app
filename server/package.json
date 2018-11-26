@@ -14,7 +14,7 @@
     "dev:client": "npm run start --prefix ../client",
     "pg:build": "sh ../database/localPostgres.sh",
     "pg:takedown": "docker kill pg && docker rm pg",
-    "test": "npm run pg:build && NODE_ENV=test mocha -r ts-node/register test/**/*.spec.ts; npm run pg:takedown"
+    "test": "npm run pg:build && NODE_ENV=test mocha ./test/**/*.spec.ts -r ts-node/register --exit; npm run pg:takedown"
   },
   "keywords": [],
   "author": "Ulminator",

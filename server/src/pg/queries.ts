@@ -1,6 +1,6 @@
 import * as helper from './helper';
 
-export const postUsersPost = `INSERT INTO ${helper.POSTS} (user_id, title, image_id) VALUES ($1, $2, $3) RETURNING id;`
+export const postUsersPost = `INSERT INTO ${helper.POSTS} (user_id, title, image_id) VALUES ($1, $2, $3) RETURNING id, created_at;`
 
 export const getPosts = `SELECT id, user_id, title, image_id, created_at FROM ${helper.POSTS};`
 
@@ -24,6 +24,10 @@ export const getCommentsAndRepliesByPostId = 'SELECT json_agg(json_build_object(
                                         `FROM ${helper.POST_COMMENTS} pc WHERE pc.post_id = $1;`;
 export const getUsernamesById = `SELECT id, username FROM ${helper.USERS} WHERE id IN `;
 
-export const postPostsComment = `INSERT INTO ${helper.POST_COMMENTS} (post_id, user_id, content) VALUES ($1, $2, $3);`
+export const getPostsCommentById = `SELECT id, post_id, user_id, content, created_at FROM ${helper.POST_COMMENTS} WHERE id = $1`;
 
-export const postsPostsCommentsReply = `INSERT INTO ${helper.POST_COMMENT_REPLIES} (comment_id, user_id, content) VALUES ($1, $2, $3);`
+export const postPostsComment = `INSERT INTO ${helper.POST_COMMENTS} (post_id, user_id, content) VALUES ($1, $2, $3) RETURNING id, created_at;`
+
+export const getPostsCommentsReplyById = `SELECT id, comment_id, user_id, content, created_at FROM ${helper.POST_COMMENT_REPLIES} WHERE id = $1`;
+
+export const postsPostsCommentsReply = `INSERT INTO ${helper.POST_COMMENT_REPLIES} (comment_id, user_id, content) VALUES ($1, $2, $3) RETURNING id, created_at;`

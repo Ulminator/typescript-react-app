@@ -5,6 +5,8 @@ const router = express.Router();
 
 router.get('/', (req, res) => postController.getPosts(req, res));
 router.get('/:postId', (req, res) => postController.getPostById(req, res));
+router.get('/:postId/comment/:commentId', (req, res) => postController.getPostsCommentById(req, res));
+router.get('/:postId/comment/:commentId/reply/:replyId', (req, res) => postController.getPostsCommentsReplyById(req, res));
 
 router.post('/:postId/comment/', (req, res) => postController.postPostsComment(req, res));
 router.post('/:postId/comment/:commentId/reply/', (req, res) => postController.postsPostsCommentsReply(req, res));

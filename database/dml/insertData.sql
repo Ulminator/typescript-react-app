@@ -4,7 +4,7 @@ INSERT INTO website.users (username, email, password) VALUES ('user2', 'fake@ema
 INSERT INTO website.users (username, email, password) VALUES ('user3', 'fake@email4.com', 'hashed-pass3');
 
 INSERT INTO website.posts (user_id, title, image_id) VALUES (1, 'Fake Post 1', 111111);
-INSERT INTO website.posts (user_id, title, image_id) VALUES (1, 'Fake Post 2', 111112);
+INSERT INTO website.posts (user_id, title, image_id) VALUES (2, 'Fake Post 2', 111112);
 INSERT INTO website.posts (user_id, title, image_id) VALUES (1, 'Fake Post 3', 111113);
 
 INSERT INTO website.post_comments (post_id, user_id, content) VALUES (1, 1, 'First!');
