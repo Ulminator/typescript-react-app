@@ -6,6 +6,7 @@ CREATE TABLE website.users
   username text UNIQUE NOT NULL,
   email text UNIQUE NOT NULL,
   password text NOT NULL,
+  created_at timestamp default now(),
   active boolean default false
 );
 
@@ -19,10 +20,7 @@ CREATE TABLE website.posts
   created_at timestamp default now()
 );
 
--- in this strategy i would have to write to both posts and post_comments table sequentially...
-
--- should i reference username or user_id (username would be rendered)
-CREATE TABLE website.post_comments
+CREATE TABLE website.comments
 (
     id serial NOT NULL PRIMARY KEY,
     post_id integer NOT NULL REFERENCES website.posts (id),
@@ -31,10 +29,10 @@ CREATE TABLE website.post_comments
     created_at timestamp default now()
 );
 
-CREATE TABLE website.post_comment_replies
+CREATE TABLE website.replies
 (
     id serial NOT NULL PRIMARY KEY,
-    comment_id integer NOT NULL REFERENCES website.post_comments (id),
+    comment_id integer NOT NULL REFERENCES website.comments (id),
     user_id integer NOT NULL REFERENCES website.users (id),
     content text NOT NULL,
     created_at timestamp default now()

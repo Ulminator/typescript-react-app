@@ -7,25 +7,28 @@
     "build": "concurrently \"npm run build:server\" \"npm run build:client\"",
     "build:server": "tsc",
     "build:client": "npm run build --prefix ../client",
-    "prestart": "npm run build",
+    "prestart": "npm run lint && npm run build",
     "start": "NODE_ENV=production node ./build/index.js",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "dev:server": "npm run pg:build && NODE_ENV=development nodemon src/index.ts --watch ./src --exec ts-node",
     "dev:client": "npm run start --prefix ../client",
     "pg:build": "sh ../database/localPostgres.sh",
     "pg:takedown": "docker kill pg && docker rm pg",
-    "test": "npm run pg:build && NODE_ENV=test mocha ./test/**/*.spec.ts -r ts-node/register --exit; npm run pg:takedown"
+    "test": "npm run pg:build && NODE_ENV=test mocha ./test/**/*.spec.ts -r ts-node/register --exit; npm run pg:takedown",
+    "lint": "tslint -c tslint.json src/**/*.ts"
   },
   "keywords": [],
   "author": "Ulminator",
   "license": "ISC",
   "dependencies": {
     "@types/express": "^4.16.0",
+    "@types/lodash": "^4.14.118",
     "@types/morgan": "^1.7.35",
     "@types/node": "^10.12.9",
     "@types/pg": "^7.4.11",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "lodash": "^4.17.11",
     "morgan": "^1.9.1",
     "pg": "^7.6.1",
     "ts-node": "^7.0.1"
@@ -39,6 +42,8 @@
     "concurrently": "^4.0.1",
     "mocha": "^5.2.0",
     "nodemon": "^1.18.6",
+    "tslint": "^5.11.0",
+    "tslint-config-airbnb": "^5.11.1",
     "typescript": "^3.1.6"
   }
 }
