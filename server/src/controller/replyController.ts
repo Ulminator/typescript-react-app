@@ -26,19 +26,17 @@ export async function getReplyById(req: Request, res: Response) {
     if (expand !== undefined) {
       const entries = expand.split(',');
       for (const entry of entries) {
-        switch (entry) {
-          case 'user':
-            const { rows } = await pool.query(queries.getUserById, [row.user_id]);
-            const camelCaseUser = _.mapKeys(rows[0], (value, key) => _.camelCase(key));
-            camelCaseUser._links = {
-              self: `/users/${rows[0].id}`,
-              posts: `users/${rows[0].id}/posts`,
-              comments: `/users/${rows[0].id}/comments`,
-              replies: `/users/${rows[0].id}/replies`,
-            };
-            reply.user = camelCaseUser;
-            delete body._expandable.user;
-            break;
+        if (entry === 'user') {
+          const { rows } = await pool.query(queries.getUserById, [row.user_id]);
+          const camelCaseUser = _.mapKeys(rows[0], (value, key) => _.camelCase(key));
+          camelCaseUser._links = {
+            self: `/users/${rows[0].id}`,
+            posts: `/users/${rows[0].id}/posts`,
+            comments: `/users/${rows[0].id}/comments`,
+            replies: `/users/${rows[0].id}/replies`,
+          };
+          reply.user = camelCaseUser;
+          delete body._expandable.user;
         }
       }
     }

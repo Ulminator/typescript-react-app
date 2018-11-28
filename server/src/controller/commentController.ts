@@ -3,9 +3,8 @@ import * as _ from 'lodash';
 import pool from '../pg/pool';
 import * as queries from '../pg/queries';
 import formatJson from '../util/formatJson';
+import removeAndCamelCase from '../util/removeAndCamelCase';
 
-// expand the users in the replies?
-// http://localhost:8080/api/comments/3?expand=user,replies&incude=id,content,created_at
 export async function getCommentById(req: Request, res: Response) {
 
   const { commentId } = req.params;
@@ -19,7 +18,7 @@ export async function getCommentById(req: Request, res: Response) {
     const body: any = {};
     const row = rows[0];
 
-    const omittedArr = ['post_id', 'user_id'];
+    let omittedArr = ['post_id', 'user_id'];
     const comment = formatJson(row, include, omittedArr);
 
     body._expandable = {
@@ -31,25 +30,27 @@ export async function getCommentById(req: Request, res: Response) {
       for (const entry of entries) {
         switch (entry) {
           case 'user':
-            const { rows } = await pool.query(queries.getUserById, [row.user_id]);
-            const camelCaseUser = _.mapKeys(rows[0], (value, key) => _.camelCase(key));
-            // camelCaseUser._links = {
-            //   self: `/users/${rows[0].id}`,
-            //   posts: `users/${rows[0].id}/posts`,
-            //   comments: `/users/${rows[0].id}/comments`,
-            //   replies: `/users/${rows[0].id}/replies`,
-            // };
-            comment.user = camelCaseUser;
             delete body._expandable.user;
+
+            const { rows } = await pool.query(queries.getUserById, [row.user_id]);
+            const user = _.mapKeys(rows[0], (value, key) => _.camelCase(key));
+            user._links = {
+              self: `/users/${rows[0].id}`,
+              posts: `/users/${rows[0].id}/posts`,
+              comments: `/users/${rows[0].id}/comments`,
+              replies: `/users/${rows[0].id}/replies`,
+            };
+            comment.user = user;
             break;
           case 'replies': {
+            delete body._expandable.replies;
+
             const { rows } = await pool.query(queries.getRepliesByCommentId, [row.id]);
+
             const replies: any[] = [];
+            omittedArr = ['comment_id', 'user_id'];
             rows.forEach((row) => {
-              // const omittedArr = ['comment_id', 'user_id'];
-              // const reply = removeFieldsAndCamelCase(row, omittedArr);
-              const omitted = _.omit(row, ['comment_id', 'user_id']);
-              const reply = _.mapKeys(omitted, (value, key) => _.camelCase(key));
+              const reply = removeAndCamelCase(row, omittedArr);
               reply._links = {
                 self: `/replies/${row.id}`,
                 comment: `/comments/${row.comment_id}/`,
@@ -58,16 +59,13 @@ export async function getCommentById(req: Request, res: Response) {
               replies.push(reply);
             });
             comment.replies = replies;
-            delete body._expandable.replies;
             break;
           }
         }
       }
     }
 
-    if (Object.keys(body._expandable).length === 0) {
-      delete body._expandable;
-    }
+    if (Object.keys(body._expandable).length === 0) { delete body._expandable; }
 
     body.comment = comment;
     body._links = {

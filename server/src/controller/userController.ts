@@ -17,20 +17,18 @@ export async function postUsersPost(req: Request, res: Response) {
 
     pool.query('COMMIT').then(() => {
       const body: any = {};
-      body.comment = { content, id: commentId, createdAt: cCreatedAt };
-      body.comment._links = {
-        self: `/api/comments/${commentId}`,
-        post: `/api/posts/${postId}`,
-        // replies: `/api/comments/${commentId}/replies`,
-        user: `/api/users/${userId}`,
-      };
 
       body.post = { title, imageId, id: postId, createdAt: pCreatedAt };
       body.post._links = {
         self: `/api/posts/${postId}`,
-        // comments: `/api/posts/${postId}/comments`,
         user: `/api/users/${userId}`,
       };
+      body.post.comments = [{ content, id: commentId, createdAt: cCreatedAt }];
+      body.post.comments[0]._links = {
+        self: `/api/comments/${commentId}`,
+        user: `/api/users/${userId}`,
+      };
+
       res.status(201).send(body);
     });
   } catch (err) {
