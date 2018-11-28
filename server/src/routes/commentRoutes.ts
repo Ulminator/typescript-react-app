@@ -9,6 +9,4 @@ router.get('/:commentId', (req, res) => commentController.getCommentById(req, re
 // /api/comments/1/reply
 router.post('/:commentId/reply/', (req, res) => commentController.postCommentReply(req, res));
 
-// api/comments/13/replies
-
 export default router;

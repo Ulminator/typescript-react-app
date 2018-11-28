@@ -9,7 +9,13 @@ interface PostsProps {
   match: match
 }
 
-interface Post { id: number; title: string; user_id: number, image_id: number, created_at: Date }
+interface Post {
+  id: number;
+  title: string;
+  imageId: number,
+  createdAt: Date,
+  _links: object,
+}
 
 const initialState: { posts: Post[] } = { posts: [] };
 

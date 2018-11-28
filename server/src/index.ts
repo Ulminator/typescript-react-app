@@ -19,8 +19,7 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   if (req.method === 'OPTIONS') {
     res.sendStatus(200);
   } else {
-    console.log(`${req.url} - ${req.method} - ${req.ip}`);
-    next();
+    return next();
   }
 });
 

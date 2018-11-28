@@ -1,6 +1,6 @@
 CREATE SCHEMA IF NOT EXISTS website;
 
-CREATE TABLE website.users
+CREATE TABLE IF NOT EXISTS website.users
 (
   id serial NOT NULL PRIMARY KEY,
   username text UNIQUE NOT NULL,
@@ -10,33 +10,29 @@ CREATE TABLE website.users
   active boolean default false
 );
 
--- user who posts has original comment
-CREATE TABLE website.posts
+CREATE TABLE IF NOT EXISTS website.posts
 (
   id serial NOT NULL PRIMARY KEY,
-  user_id integer NOT NULL REFERENCES website.users (id),
+  user_id integer NOT NULL REFERENCES website.users (id) ON DELETE CASCADE,
   title text NOT NULL,
   image_id text NOT NULL,
   created_at timestamp default now()
 );
 
-CREATE TABLE website.comments
+CREATE TABLE IF NOT EXISTS website.comments
 (
     id serial NOT NULL PRIMARY KEY,
-    post_id integer NOT NULL REFERENCES website.posts (id),
-    user_id integer NOT NULL REFERENCES website.users (id),
+    post_id integer NOT NULL REFERENCES website.posts (id) ON DELETE CASCADE,
+    user_id integer NOT NULL REFERENCES website.users (id) ON DELETE CASCADE,
     content text NOT NULL,
     created_at timestamp default now()
 );
 
-CREATE TABLE website.replies
+CREATE TABLE IF NOT EXISTS website.replies
 (
     id serial NOT NULL PRIMARY KEY,
-    comment_id integer NOT NULL REFERENCES website.comments (id),
-    user_id integer NOT NULL REFERENCES website.users (id),
+    comment_id integer NOT NULL REFERENCES website.comments (id) ON DELETE CASCADE,
+    user_id integer NOT NULL REFERENCES website.users (id) ON DELETE CASCADE,
     content text NOT NULL,
     created_at timestamp default now()
 );
-
--- to assist the order by for the api/post/:postId route
--- CREATE INDEX post_commnent_replies_comment_id_created_at_idx on website.post_comment_replies(comment_id, created_at);
