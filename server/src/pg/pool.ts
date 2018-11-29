@@ -1,5 +1,7 @@
 import { Pool } from 'pg';
 
+require('dotenv').config();
+
 let config;
 if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production') {
   config = {
@@ -23,10 +25,21 @@ if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production
 
 const pool = new Pool(config);
 
-pool.connect((err) => {
-  if (err) {
-    return console.log('Error acquiring client', err.stack);
-  }
-});
+// pool.on('error', (err, client) => {
+//   console.error('Unexpected error on idle client', err);
+//   process.exit(-1);
+// });
+
+// async function query(statement: string, params: any[]) {
+//   const client = await pool.connect();
+//   try {
+//     const res = await client.query(statement, params);
+//     return res;
+//   } catch (err) {
+//     console.log(err);
+//   } finally {
+//     client.release();
+//   }
+// }
 
 export default pool;

@@ -15,6 +15,7 @@
     "pg:build": "sh ./test/database/localPostgres.sh",
     "pg:takedown": "docker kill pg && docker rm pg",
     "test": "npm run pg:build && NODE_ENV=test mocha ./test/**/*.spec.ts -r ts-node/register --exit; npm run pg:takedown",
+    "test:cicd": "NODE_ENV=test mocha ./test/**/*.spec.ts -r ts-node/register --exit",
     "lint": "tslint -c tslint.json src/**/*.ts"
   },
   "keywords": [],
@@ -27,6 +28,7 @@
     "@types/node": "^10.12.9",
     "@types/pg": "^7.4.11",
     "body-parser": "^1.18.3",
+    "dotenv": "^6.1.0",
     "express": "^4.16.4",
     "lodash": "^4.17.11",
     "morgan": "^1.9.1",

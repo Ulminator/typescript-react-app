@@ -6,6 +6,3 @@ env_variables:
 
 beta_settings:
   cloud_sql_instances: ulminator-223503:us-central1:demo
-
-health_check:
-  enable_health_check: False
