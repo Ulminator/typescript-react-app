@@ -1,7 +1,7 @@
 # SERVICE="$(node -e "console.log(require('./package.json').name);")"
 # VERSION="$(node -e "console.log(require('./package.json').version);")"
 SERVICE="typescript-react-app"
-VERSION="1.0.0"
+VERSION="1.0.2"
 
 PROJECT=$1
 

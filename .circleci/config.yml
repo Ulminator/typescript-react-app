@@ -1,0 +1,70 @@
+version: 2
+jobs:
+  test-locally:
+    docker:
+      - image: circleci/node:11.3.0-browsers-legacy
+        environment:
+          TEST_DATABASE_URL: postgresql://postgres@localhost/postgres
+
+      - image: circleci/postgres:9.6-alpine-ram
+
+    steps:
+      - run: ls
+      - checkout
+
+      - run:
+          name: Download Node Modules
+          command: |
+            cd client && npm ci
+            cd ../server && npm ci
+
+      - run:
+          name: Install Postgresql-Client
+          command: |
+            sudo apt-get update
+            sudo apt-get install postgresql-client-9.6 
+
+      - run: 
+          name: Populate Postgres
+          command: |
+            psql -d $TEST_DATABASE_URL -w -f ./server/test/database/ddl/createTables.sql
+            psql -d $TEST_DATABASE_URL -w -f ./server/test/database/dml/insertData.sql
+
+      - run: cd server && npm run test:cicd
+
+  build-upload-deploy-image:
+    machine: true
+    steps:
+      - checkout
+      - run:
+          name: Build Docker Image
+          command: |
+            echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
+            mkdir ${HOME}/project/client/config
+            echo ${REACT_ENV_VARS} > ${HOME}/project/client/config/production.env
+            SERVER_ENV_VARS="INSTANCE_CONNECTION_NAME=$INSTANCE_CONNECTION_NAME\nPG_DATABASE=$PG_DATABASE\nPG_PASSWORD=$PG_PASSWORD\nPG_USER=$PG_USER"
+            echo -e ${SERVER_ENV_VARS} > ${HOME}/project/server/.env
+            docker build --rm=false -t us.gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:$CIRCLE_SHA1 .
+      - run: 
+          name: Upload To Google Container Registry
+          command: |
+            gcloud auth activate-service-account --key-file ${HOME}/gcp-key.json
+            gcloud --quiet config set project ${GCP_PROJECT}
+            gcloud docker -- push us.gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:$CIRCLE_SHA1
+      - run: 
+          name: Deploy To App Engine
+          command: |
+            gcloud -q app deploy app.yaml --project=${GCP_PROJECT} --image-url=us.gcr.io/${GCP_PROJECT}/${IMAGE_NAME}:$CIRCLE_SHA1
+
+workflows:
+  version: 2
+  test-upload-deploy:
+    jobs:
+      - test-locally
+      - build-upload-deploy-image:
+          requires:
+            - test-locally
+          filters:
+            branches:
+              only:
+                - master

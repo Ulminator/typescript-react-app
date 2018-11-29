@@ -7,7 +7,7 @@ const { expect } = chai;
 
 chai.use(chaiHttp);
 
-describe('Health Check', () => {
+describe('Health Check Test', () => {
   it('should be up', (done) => {
     chai.request(app)
       .get('/api/health')
@@ -16,5 +16,5 @@ describe('Health Check', () => {
         expect(res.body.status).to.equal('UP');
         done();
       });
-    });
+  });
 });

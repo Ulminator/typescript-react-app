@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { BrowserRouter as Router, Route, Link, Switch } from 'react-router-dom';
-import PostsPage from './components/PostsPage';
-import NewPostPage from './components/NewPostPage';
+import PostsPage from './components/posts/PostsPage';
+import NewPostPage from './components/posts/NewPostPage';
 
 const Home = () => <h2><li><Link to="/posts">Posts</Link></li></h2>;
 

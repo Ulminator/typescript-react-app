@@ -1,99 +1,151 @@
 import { Request, Response } from 'express';
-import client from '../pg/client';
+import * as _ from 'lodash';
+import execute from '../pg/execute';
 import * as queries from '../pg/queries';
 import generateInClause from '../util/generateInClause';
+import formatJson from '../util/formatJson';
+import removeAndCamelCase from '../util/removeAndCamelCase';
 
-export async function getPosts(_req: Request, res: Response) {
-  const { rows } = await client.query(queries.getPosts);
-  res.send(rows);
-};
+export async function getPosts(req: Request, res: Response) {
+
+  const { include } = req.query;
+
+  const { rows } = await execute(queries.getPosts);
+
+  if (rows.length === 0) {
+    res.status(404).send([]);
+  } else {
+    const posts: any[] = [];
+    const omittedArr = ['post_id', 'user_id'];
+
+    rows.forEach((row) => {
+
+      const post = formatJson(row, include, omittedArr);
+
+      post._links = {
+        self: `/api/posts/${row.id}`,
+        user: `/api/users/${row.user_id}`,
+      };
+
+      posts.push(post);
+    });
+
+    const body: any = {};
+    body.posts = posts;
+    body._links = { self: '/api/posts' };
+
+    res.send(body);
+  }
+
+}
+
+function generateUser(row: { user_id: string; username: string }) {
+  return {
+    id: row.user_id,
+    username: row.username,
+    _links: {
+      self: `/api/users/${row.user_id}`,
+      posts: `/users/${row.user_id}/posts`,
+      comments: `/users/${row.user_id}/comments`,
+      replies: `/users/${row.user_id}/replies`,
+    },
+  };
+}
 
 export async function getPostById(req: Request, res: Response) {
 
   const { postId } = req.params;
-  
-  const { rows: pRows } = await client.query(queries.getPostById, [postId]);
-  const { rows: cRows } = await client.query(queries.getCommentsAndRepliesByPostId, [postId]);
+  const { include, expand } = req.query;
 
-  let user_ids = new Set();
-  let { comments }: { comments: Comment[] } = cRows[0];
+  const { rows } = await execute(queries.getPostByPostId, [postId]);
 
-  if (comments !== null) {
-    comments.forEach(comment => {
-      if (!user_ids.has(comment.user_id)) user_ids.add(comment.user_id)
-      comment.replies.forEach(reply => {
-        if (!user_ids.has(reply.user_id)) user_ids.add(reply.user_id)
-      });
-    });
-  
-    const { rows: uRows }: { rows: Row[] } = await client.query(queries.getUsernamesById + generateInClause([...user_ids]), [...user_ids]);
-    const idUsernameMap: IHash = {};
-    uRows.forEach(row => idUsernameMap[row.id] = row.username);
-  
-    comments.forEach(comment => {
-      comment.username = idUsernameMap[comment.user_id];
-      comment.replies.forEach(reply => {
-        reply.username = idUsernameMap[reply.user_id];
-      });
-    });
+  if (rows.length === 0) {
+    res.status(404).send({});
   } else {
-    comments = [];
+    const body: any = {
+      _expandable: { comments: `/api/posts/${postId}/comments` },
+      _links: { self: `/api/posts/${postId}` },
+    };
+    const row = rows[0];
+
+    const omittedArr = ['user_id', 'username'];
+    const post = formatJson(row, include, omittedArr);
+
+    post.user = generateUser(row);
+
+    if (expand !== undefined) {
+      const entries = expand.split(',');
+      for (const entry of entries) {
+        if (entry === 'comments') {
+          delete body._expandable;
+
+          const { rows: commentRows } = await execute(queries.getCommentsByPostId, [postId]);
+          if (commentRows.length === 0) {
+            post.comments = [];
+          } else {
+
+            const comments: any[] = [];
+            const commentIds: number[] = [];
+            for (const row of commentRows) {
+              const comment = removeAndCamelCase(row, omittedArr);
+              comment.user = generateUser(row);
+
+              comments.push(comment);
+              commentIds.push(row.id);
+            }
+
+            let query = queries.getRepliesByCommentIds + generateInClause(commentIds);
+            query += queries.orderByCommentIdAndCreatedAt;
+
+            const { rows: replyRows } = await execute(query, commentIds);
+
+            omittedArr.push('comment_id');
+            while (replyRows.length > 0) {
+              const row = replyRows.shift();
+              for (const comment of comments) {
+                if (comment.id !== row.comment_id && comment.replies === undefined) {
+                  comment.replies = [];
+                  break;
+                }
+                if (comment.id === row.comment_id) {
+                  if (comment.replies === undefined) { comment.replies = []; }
+                  const omitted = _.omit(row, omittedArr);
+                  const reply = _.mapKeys(omitted, (value, key) => _.camelCase(key));
+                  reply.user = generateUser(row);
+                  comment.replies.push(reply);
+                }
+              }
+            }
+            post.comments = comments;
+          }
+        }
+      }
+    }
+
+    body.post = post;
+    res.status(200).send(body);
   }
-
-  res.send({ id: pRows[0].id, userId: pRows[0].user_id, title: pRows[0].title, imageId: pRows[0].image_id, createdAt: pRows[0].created_at, comments });
-};
-
-interface Row { id: string, username: string }
-interface IHash { [details: string]: string};
-interface Reply { reply_id: number, user_id: string, content: string, created_at: Date, username: string }
-interface Comment { comment_id: number, user_id: string, content: string, created_at: Date, replies: Reply[], username: string }
-
-export async function getPostsCommentById(req: Request, res: Response) {
-  const { commentId } = req.params;
-  const { rows } = await client.query(queries.getPostsCommentById, [commentId]);
-  res.send(rows[0]);
 }
 
-export async function postPostsComment(req: Request, res: Response) {
+export async function postPostComment(req: Request, res: Response) {
 
   const { postId } = req.params;
   const { userId, content } = req.body;
 
-  client.query(queries.postPostsComment, [postId, userId, content])
+  execute(queries.postPostsComment, [postId, userId, content])
         .then((result) => {
+          const body: any = {};
           const { id, created_at: createdAt } = result.rows[0];
-          const link = `/api/posts/${postId}/comment/${id}`;
-          res.status(200).send({
-            comment: { id, postId, userId, content, createdAt, link }
-          });
+          body.comment = { id, content, createdAt };
+          body._links = {
+            self: `/api/comments/${id}`,
+            post: `/api/posts/${postId}`,
+            user: `/api/users/${userId}`,
+          };
+          res.status(201).send(body);
         })
-        .catch(err => {
+        .catch((err) => {
           console.log(err);
           res.status(500).send({});
         });
-};
-
-export async function getPostsCommentsReplyById(req: Request, res: Response) {
-  const { replyId } = req.params;
-  const { rows } = await client.query(queries.getPostsCommentsReplyById, [replyId]);
-  res.send(rows[0]);
 }
-
-export async function postsPostsCommentsReply(req: Request, res: Response) {
-
-  const { postId, commentId } = req.params;
-  const { userId, content } = req.body;
-
-  client.query(queries.postsPostsCommentsReply, [commentId, userId, content])
-        .then((result) => {
-          const { id, created_at: createdAt } = result.rows[0];
-          const link = `/api/posts/${postId}/comment/${commentId}/reply/${id}`;
-          res.status(200).send({
-            reply: { id, userId, content, createdAt, link }
-          });
-        })
-        .catch(err => {
-          console.log(err);
-          res.status(500).send({});
-        });
-};

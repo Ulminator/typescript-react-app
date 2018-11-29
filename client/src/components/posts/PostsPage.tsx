@@ -1,17 +1,23 @@
 import axios from 'axios';
 import * as React from 'react';
 import { Link, match } from 'react-router-dom';
-import ListingCard from './ListingCard';
+import PostCard from './PostCard';
 
 interface PostsProps {
   history: History
-  // location: Location
+  location: Location
   match: match
 }
 
-interface Listing { id: number; title: string; user_id: number, image_id: number, created_at: Date }
+interface Post {
+  id: number;
+  title: string;
+  imageId: number,
+  createdAt: Date,
+  _links: object,
+}
 
-const initialState: { listings: Listing[] } = { listings: [] };
+const initialState: { posts: Post[] } = { posts: [] };
 
 type State = Readonly<typeof initialState>
 
@@ -23,28 +29,27 @@ class PostsPage extends React.Component<PostsProps, State> {
 
     axios.get(`${REACT_APP_API_URL}/posts`)
       .then((res) => {
-        this.setState({ listings: res.data });
+        this.setState({ posts: res.data.posts });
       })
       .catch((err) => { console.log(err); });
   }
 
   render() {
-    const { listings } = this.state;
+    const { posts } = this.state;
     const { match } = this.props;
     return(
       <div style={{ position: 'relative' }}>
         <Link to={`${match.url}/new`} style={{ 
                                         border: '2px',
                                         borderStyle: 'solid', 
-                                        padding: '25px', 
-                                        
+                                        padding: '25px',      
                                         position: 'absolute', 
                                         top: '10px', 
                                         right: '25px', 
                                         textDecoration: 'none' }}>
           Create New Post
         </Link>
-        { listings.map(listing => <ListingCard key={listing.id} listing={listing} />)}
+        { posts.map(post => <PostCard key={post.id} post={post} />)}
       </div>
     );
   }
