@@ -8,8 +8,6 @@ jobs:
 
       - image: circleci/postgres:9.6-alpine-ram
 
-    working_directory: ~/app
-
     steps:
       - run: ls
       - checkout
@@ -66,3 +64,7 @@ workflows:
       - build-upload-deploy-image:
           requires:
             - test-locally
+          filters:
+            branches:
+              only:
+                - master

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as _ from 'lodash';
-import pool from '../pg/pool';
+import execute from '../pg/execute';
 import * as queries from '../pg/queries';
 import formatJson from '../util/formatJson';
 
@@ -9,7 +9,7 @@ export async function getReplyById(req: Request, res: Response) {
   const { replyId } = req.params;
   const { include, expand } = req.query;
 
-  const { rows } = await pool.query(queries.getReplyById, [replyId]);
+  const { rows } = await execute(queries.getReplyById, [replyId]);
 
   if (rows.length === 0) {
     res.status(404).send({});
@@ -27,7 +27,7 @@ export async function getReplyById(req: Request, res: Response) {
       const entries = expand.split(',');
       for (const entry of entries) {
         if (entry === 'user') {
-          const { rows } = await pool.query(queries.getUserById, [row.user_id]);
+          const { rows } = await execute(queries.getUserById, [row.user_id]);
           const camelCaseUser = _.mapKeys(rows[0], (value, key) => _.camelCase(key));
           camelCaseUser._links = {
             self: `/users/${rows[0].id}`,

@@ -8,111 +8,224 @@ const { expect } = chai;
 chai.use(chaiHttp);
 
 describe('Post Controller', () => {
-  // it('should get all posts', (done) => {
-  //   chai.request(app)
-  //     .get('/api/posts/')
-  //     .end((err, res) => {
-  //       expect(res).to.have.status(200);
-  //       const { body } = res;
-  //       expect(body).to.be.an('Array');
-  //       expect(body).to.have.length(3);
+  it('should get all posts', (done) => {
+    chai.request(app)
+      .get('/api/posts/')
+      .end((err, res) => {
+        expect(res).to.have.status(200);
 
-  //       expect(Object.keys(body[0]).length).to.equal(5);
-  //       expect(body[0].id).to.equal(1);
-  //       expect(body[0].user_id).to.equal(1);
-  //       expect(body[0].title).to.equal('Fake Post 1');
-  //       expect(body[0].image_id).to.equal('111111');
+        const { body } = res;
+        expect(body._links).to.deep.equal({ self: '/api/posts' });
 
-  //       expect(Object.keys(body[1]).length).to.equal(5);
-  //       expect(body[1].id).to.equal(2);
-  //       expect(body[1].user_id).to.equal(2);
-  //       expect(body[1].title).to.equal('Fake Post 2');
-  //       expect(body[1].image_id).to.equal('111112');
+        const { posts } = body;
+        expect(posts).to.be.an('Array');
+        expect(posts).to.have.length(5);
 
-  //       expect(Object.keys(body[2]).length).to.equal(5);
-  //       expect(body[2].id).to.equal(3);
-  //       expect(body[2].user_id).to.equal(1);
-  //       expect(body[2].title).to.equal('Fake Post 3');
-  //       expect(body[2].image_id).to.equal('111113');
+        expect(posts[0].id).to.equal(1);
+        expect(posts[0].title).to.equal('The Cost Of JavaScript In 2018');
+        expect(posts[0].imageId).to.equal('111111');
+        expect(posts[0]).to.have.property('createdAt');
+        expect(posts[0]._links).to.deep.equal({ self: '/api/posts/1', user: '/api/users/1' });
 
-  //       done();
-  //     });
-  // });
+        expect(posts[1].id).to.equal(2);
+        expect(posts[1].title).to.equal('JavaScript fundamentals before learning React');
+        expect(posts[1].imageId).to.equal('333333');
+        expect(posts[1]).to.have.property('createdAt');
+        expect(posts[1]._links).to.deep.equal({ self: '/api/posts/2', user: '/api/users/2' });
 
-  // it('should get post by post id', (done) => {
-  //   chai.request(app)
-  //     .get('/api/posts/1')
-  //     .end((err, res) => {
-  //       expect(res).to.have.status(200);
-  //       const { body } = res;
+        expect(posts[2].id).to.equal(3);
+        expect(posts[2].title).to.equal('The Best Explanation of JavaScript Reactivity');
+        expect(posts[2].imageId).to.equal('222222');
+        expect(posts[2]).to.have.property('createdAt');
+        expect(posts[2]._links).to.deep.equal({ self: '/api/posts/3', user: '/api/users/2' });
 
-  //       console.log(res.body);
-  //       expect(Object.keys(body).length).to.equal(6);
-  //       expect(body.id).to.equal(1);
-  //       //add username to body?
-  //       expect(body.userId).to.equal(1);
-  //       expect(body.title).to.equal('Fake Post 1');
-  //       expect(body.imageId).to.equal('111111');
+        expect(posts[3].id).to.equal(4);
+        expect(posts[3].title).to.equal('The definitive guide to JavaScript Dates');
+        expect(posts[3].imageId).to.equal('999999');
+        expect(posts[3]).to.have.property('createdAt');
+        expect(posts[3]._links).to.deep.equal({ self: '/api/posts/4', user: '/api/users/1' });
 
-  //       const { comments } = body;
-  //       expect(comments).to.be.an('Array');
-  //       expect(comments).to.have.length(3);
+        expect(posts[4].id).to.equal(5);
+        expect(posts[4].title).to.equal('How to visually design state in JavaScript');
+        expect(posts[4].imageId).to.equal('777777');
+        expect(posts[4]).to.have.property('createdAt');
+        expect(posts[4]._links).to.deep.equal({ self: '/api/posts/5', user: '/api/users/3' });
 
-  //       // comment 1
-  //       expect(Object.keys(comments[0]).length).to.equal(6);
-  //       expect(comments[0].comment_id).to.equal(1);
-  //       expect(comments[0].content).to.equal('First!');
-  //       expect(comments[0].user_id).to.equal(1);
-  //       expect(comments[0].username).to.equal('Ulminator');
-  //       expect(comments[0].replies).to.be.an('Array');
-  //       expect(comments[0].replies.length).to.equal(0);
+        done();
+      });
+  });
 
-  //       // comment 2
-  //       expect(Object.keys(comments[1]).length).to.equal(6);
-  //       expect(comments[1].comment_id).to.equal(2);
-  //       expect(comments[1].content).to.equal('This is a dummy comment.');
-  //       expect(comments[1].user_id).to.equal(2);
-  //       expect(comments[1].username).to.equal('user1');
-  //       expect(comments[1].replies).to.be.an('Array');
+  it('should get post by post id', (done) => {
+    chai.request(app)
+      .get('/api/posts/1')
+      .end((err, res) => {
+        expect(res).to.have.status(200);
+        const { body } = res;
 
-  //       let { replies } = comments[1];
-  //       expect(replies.length).to.equal(3);
-  //       expect(Object.keys(replies[0]).length).to.equal(5);
-  //       expect(replies[0].reply_id).to.equal(4);
-  //       expect(replies[0].content).to.equal('Reply made after others but set in past.');
-  //       expect(replies[0].user_id).to.equal(1);
-  //       expect(replies[0].username).to.equal('Ulminator');
+        expect(Object.keys(res.body).length).to.equal(3);
+        expect(body._expandable).to.deep.equal({ comments: '/api/posts/1/comments' });
+        expect(body._links).to.deep.equal({ self: '/api/posts/1' });
 
-  //       expect(Object.keys(replies[1]).length).to.equal(5);
-  //       expect(replies[1].reply_id).to.equal(1);
-  //       expect(replies[1].content).to.equal('user2 replying to the comment of user1');
-  //       expect(replies[1].user_id).to.equal(3);
-  //       expect(replies[1].username).to.equal('user2');
+        const { post } = body;
+        expect(post.id).to.equal(1);
+        expect(post.title).to.equal('The Cost Of JavaScript In 2018');
+        expect(post.imageId).to.equal('111111');
+        expect(post).to.have.property('createdAt');
 
-  //       expect(Object.keys(replies[2]).length).to.equal(5);
-  //       expect(replies[2].reply_id).to.equal(3);
-  //       expect(replies[2].content).to.equal('user3 replying to the comment of user1');
-  //       expect(replies[2].user_id).to.equal(4);
-  //       expect(replies[2].username).to.equal('user3');
+        const { user } = post;
+        expect(user.id).to.equal(1);
+        expect(user.username).to.equal('Matt');
+        expect(user._links).to.deep.equal({
+          self: '/api/users/1',
+          posts: '/users/1/posts',
+          comments: '/users/1/comments',
+          replies: '/users/1/replies',
+        });
 
-  //       // comment 3
-  //       expect(Object.keys(comments[2]).length).to.equal(6);
-  //       expect(comments[2].comment_id).to.equal(3);
-  //       expect(comments[2].content).to.equal('This is a second dummy comment.');
-  //       expect(comments[2].user_id).to.equal(3);
-  //       expect(comments[2].username).to.equal('user2');
-  //       expect(comments[2].replies).to.be.an('Array');
+        done();
+      });
+  });
 
-  //       replies = comments[2].replies;
-  //       expect(replies.length).to.equal(1);
-  //       expect(Object.keys(replies[0]).length).to.equal(5);
-  //       expect(replies[0].reply_id).to.equal(2);
-  //       expect(replies[0].content).to.equal('user3 replying to the comment of user2');
-  //       expect(replies[0].user_id).to.equal(4);
-  //       expect(replies[0].username).to.equal('user3');
+  it('should get post by post id and expand comments', (done) => {
+    chai.request(app)
+      .get('/api/posts/1?expand=comments')
+      .end((err, res) => {
+        expect(res).to.have.status(200);
+        const { body } = res;
 
-  //       done();
-  //     });
-  // });
+        expect(Object.keys(res.body).length).to.equal(2);
+        expect(body).to.not.have.property('_expandable');
+        expect(body._links).to.deep.equal({ self: '/api/posts/1' });
+
+        const { post } = body;
+        expect(post.id).to.equal(1);
+        expect(post.title).to.equal('The Cost Of JavaScript In 2018');
+        expect(post.imageId).to.equal('111111');
+        expect(post).to.have.property('createdAt');
+
+        const { user } = post;
+        expect(user.id).to.equal(1);
+        expect(user.username).to.equal('Matt');
+        expect(user._links).to.deep.equal({
+          self: '/api/users/1',
+          posts: '/users/1/posts',
+          comments: '/users/1/comments',
+          replies: '/users/1/replies',
+        });
+
+        const { comments } = post;
+
+        expect(comments).to.be.an('Array');
+        expect(comments).to.have.length(3);
+
+        const comment = comments[0];
+        expect(comment.id).to.equal(1);
+        expect(comment.content).to.equal('First!');
+        expect(comment.user).to.deep.equal({
+          id: 1,
+          username: 'Matt',
+          _links: {
+            self: '/api/users/1',
+            posts: '/users/1/posts',
+            comments: '/users/1/comments',
+            replies: '/users/1/replies',
+          },
+        });
+
+        const { replies } = comment;
+        expect(replies).to.be.an('Array');
+        expect(replies[1].id).to.equal(2);
+        expect(replies[1].content).to.equal('Third!!!');
+        expect(replies[1]).to.have.property('createdAt');
+        expect(replies[1].user).to.deep.equal({
+          id: 3,
+          username: 'Sally',
+          _links: {
+            self: '/api/users/3',
+            posts: '/users/3/posts',
+            comments: '/users/3/comments',
+            replies: '/users/3/replies',
+          },
+        });
+        done();
+      });
+
+    it('should get post by post id and include only title', (done) => {
+      chai.request(app)
+        .get('/api/posts/1?include=title')
+        .end((err, res) => {
+          expect(res).to.have.status(200);
+          const { body } = res;
+
+          expect(Object.keys(res.body).length).to.equal(3);
+          expect(body._expandable).to.deep.equal({ comments: '/api/posts/1/comments' });
+          expect(body._links).to.deep.equal({ self: '/api/posts/1' });
+
+          const { post } = body;
+          expect(post).to.not.have.property('id');
+          expect(post.title).to.equal('The Cost Of JavaScript In 2018');
+          expect(post).to.not.have.property('imageId');
+          expect(post).to.not.have.property('createdAt');
+
+          const { user } = post;
+          expect(user.id).to.equal(1);
+          expect(user.username).to.equal('Matt');
+          expect(user._links).to.deep.equal({
+            self: '/api/users/1',
+            posts: '/users/1/posts',
+            comments: '/users/1/comments',
+            replies: '/users/1/replies',
+          });
+
+          done();
+        });
+    });
+  });
+
+  it('should create a comment', (done) => {
+    chai.request(app)
+      .post('/api/posts/1/comment')
+      .send({ userId: 3, content: 'Test Comment' })
+      .end((err, res) => {
+        expect(res).to.have.status(201);
+
+        const { body } = res;
+        expect(Object.keys(body).length).to.equal(2);
+        expect(body._links).to.deep.equal({
+          self: '/api/comments/5',
+          post: '/api/posts/1',
+          user: '/api/users/3',
+        });
+
+        const { comment } = body;
+        expect(comment.id).to.equal(5);
+        expect(comment.content).to.equal('Test Comment');
+        expect(comment).to.have.property('createdAt');
+
+        done();
+      });
+  });
+
+  it('should fail to create a reply due to bad post id', (done) => {
+    chai.request(app)
+      .post('/api/posts/100/comment')
+      .send({ userId: 3, content: 'Test Comment' })
+      .end((err, res) => {
+        expect(res).to.have.status(500);
+        expect(Object.keys(res.body).length).to.equal(0);
+        done();
+      });
+  });
+
+  it('should fail to create a reply due to bad user id', (done) => {
+    chai.request(app)
+      .post('/api/posts/1/comment')
+      .send({ userId: 100, content: 'Test Comment' })
+      .end((err, res) => {
+        expect(res).to.have.status(500);
+        expect(Object.keys(res.body).length).to.equal(0);
+        done();
+      });
+  });
 
 });

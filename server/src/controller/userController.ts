@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import pool from '../pg/pool';
+import execute from '../pg/execute';
 import * as queries from '../pg/queries';
 
 export async function postUsersPost(req: Request, res: Response) {
@@ -9,13 +9,13 @@ export async function postUsersPost(req: Request, res: Response) {
   const { title, imageId, content }: { title: string, imageId: string, content: string } = req.body;
 
   try {
-    await pool.query('BEGIN');
-    const { rows: pRows } = await pool.query(queries.postUsersPost, [userId, title, imageId]);
+    await execute('BEGIN');
+    const { rows: pRows } = await execute(queries.postUsersPost, [userId, title, imageId]);
     const { id: postId, created_at: pCreatedAt } = pRows[0];
-    const { rows: cRows } = await pool.query(queries.postPostsComment, [postId, userId, content]);
+    const { rows: cRows } = await execute(queries.postPostsComment, [postId, userId, content]);
     const { id: commentId, created_at: cCreatedAt } = cRows[0];
 
-    pool.query('COMMIT').then(() => {
+    execute('COMMIT').then(() => {
       const body: any = {};
 
       body.post = { title, imageId, id: postId, createdAt: pCreatedAt };
@@ -33,6 +33,6 @@ export async function postUsersPost(req: Request, res: Response) {
     });
   } catch (err) {
     console.log(err);
-    pool.query('ROLLBACK').then(() => res.status(500).send({}));
+    execute('ROLLBACK').then(() => res.status(500).send({}));
   }
 }

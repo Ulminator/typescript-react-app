@@ -19,27 +19,22 @@ if (process.env.INSTANCE_CONNECTION_NAME && process.env.NODE_ENV === 'production
   };
 }
 
-// config.max = 20;
-// config.idleTimeoutMillis = 3000;
-// config.connectionTimeoutMillis = 2000;
-
 const pool = new Pool(config);
 
-// pool.on('error', (err, client) => {
-//   console.error('Unexpected error on idle client', err);
-//   process.exit(-1);
-// });
+pool.on('error', (err, client) => {
+  console.log('Unexpected error on idle client', err);
+  process.exit(-1);
+});
 
-// async function query(statement: string, params: any[]) {
-//   const client = await pool.connect();
-//   try {
-//     const res = await client.query(statement, params);
-//     return res;
-//   } catch (err) {
-//     console.log(err);
-//   } finally {
-//     client.release();
-//   }
-// }
+async function execute(statement: string, params?: any[]) {
+  const client = await pool.connect();
+  try {
+    let res;
+    if (params === undefined) { res = await client.query(statement); }
+    res = await client.query(statement, params);
+    return res;
+  } catch (err) { throw err; }
+  finally { client.release(); }
+}
 
-export default pool;
+export default execute;

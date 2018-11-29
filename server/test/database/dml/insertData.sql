@@ -17,5 +17,5 @@ INSERT INTO website.comments (post_id, user_id, content) VALUES (2, 2, 'Only 1 c
 INSERT INTO website.replies (comment_id, user_id, content) VALUES (1, 2, 'Second!!');
 INSERT INTO website.replies (comment_id, user_id, content) VALUES (1, 3, 'Third!!!');
 INSERT INTO website.replies (comment_id, user_id, content) VALUES (1, 4, 'Fourth!!!!');
-INSERT INTO website.replies (comment_id, user_id, content) VALUES (2, 3, 'The only reply to this comment');
+INSERT INTO website.replies (comment_id, user_id, content) VALUES (2, 3, 'Inserted first but displayed last.');
 INSERT INTO website.replies (comment_id, user_id, content, created_at) VALUES (2, 1, 'Reply made after others but set in past.', '2016-06-22 19:10:25-07');

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as _ from 'lodash';
-import pool from '../pg/pool';
+import execute from '../pg/execute';
 import * as queries from '../pg/queries';
 import formatJson from '../util/formatJson';
 import removeAndCamelCase from '../util/removeAndCamelCase';
@@ -10,7 +10,7 @@ export async function getCommentById(req: Request, res: Response) {
   const { commentId } = req.params;
   const { include, expand } = req.query;
 
-  const { rows } = await pool.query(queries.getCommentById, [commentId]);
+  const { rows } = await execute(queries.getCommentById, [commentId]);
 
   if (rows.length === 0) {
     res.status(404).send({});
@@ -32,7 +32,7 @@ export async function getCommentById(req: Request, res: Response) {
           case 'user':
             delete body._expandable.user;
 
-            const { rows } = await pool.query(queries.getUserById, [row.user_id]);
+            const { rows } = await execute(queries.getUserById, [row.user_id]);
             const user = _.mapKeys(rows[0], (value, key) => _.camelCase(key));
             user._links = {
               self: `/users/${rows[0].id}`,
@@ -45,7 +45,7 @@ export async function getCommentById(req: Request, res: Response) {
           case 'replies': {
             delete body._expandable.replies;
 
-            const { rows } = await pool.query(queries.getRepliesByCommentId, [row.id]);
+            const { rows } = await execute(queries.getRepliesByCommentId, [row.id]);
 
             const replies: any[] = [];
             omittedArr = ['comment_id', 'user_id'];
@@ -82,7 +82,7 @@ export async function postCommentReply(req: Request, res: Response) {
   const { commentId } = req.params;
   const { userId, content } = req.body;
 
-  pool.query(queries.postCommentsReply, [commentId, userId, content])
+  execute(queries.postCommentsReply, [commentId, userId, content])
       .then((result) => {
         const body: any = {};
         const { id, created_at: createdAt } = result.rows[0];
@@ -92,7 +92,7 @@ export async function postCommentReply(req: Request, res: Response) {
           comment: `/api/comments/${commentId}`,
           user: `/api/users/${userId}`,
         };
-        res.status(200).send(body);
+        res.status(201).send(body);
       })
       .catch((err) => {
         console.log(err);

@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import * as _ from 'lodash';
-import pool from '../pg/pool';
+import execute from '../pg/execute';
 import * as queries from '../pg/queries';
 import generateInClause from '../util/generateInClause';
 import formatJson from '../util/formatJson';
@@ -10,7 +10,7 @@ export async function getPosts(req: Request, res: Response) {
 
   const { include } = req.query;
 
-  const { rows } = await pool.query(queries.getPosts);
+  const { rows } = await execute(queries.getPosts);
 
   if (rows.length === 0) {
     res.status(404).send([]);
@@ -57,12 +57,15 @@ export async function getPostById(req: Request, res: Response) {
   const { postId } = req.params;
   const { include, expand } = req.query;
 
-  const { rows } = await pool.query(queries.getPostByPostId, [postId]);
+  const { rows } = await execute(queries.getPostByPostId, [postId]);
 
   if (rows.length === 0) {
     res.status(404).send({});
   } else {
-    const body: any = { _expandable: { comments: `/api/posts/${postId}/comments` } };
+    const body: any = {
+      _expandable: { comments: `/api/posts/${postId}/comments` },
+      _links: { self: `/api/posts/${postId}` },
+    };
     const row = rows[0];
 
     const omittedArr = ['user_id', 'username'];
@@ -76,7 +79,7 @@ export async function getPostById(req: Request, res: Response) {
         if (entry === 'comments') {
           delete body._expandable;
 
-          const { rows: commentRows } = await pool.query(queries.getCommentsByPostId, [postId]);
+          const { rows: commentRows } = await execute(queries.getCommentsByPostId, [postId]);
           if (commentRows.length === 0) {
             post.comments = [];
           } else {
@@ -94,8 +97,9 @@ export async function getPostById(req: Request, res: Response) {
             let query = queries.getRepliesByCommentIds + generateInClause(commentIds);
             query += queries.orderByCommentIdAndCreatedAt;
 
-            const { rows: replyRows } = await pool.query(query, commentIds);
+            const { rows: replyRows } = await execute(query, commentIds);
 
+            omittedArr.push('comment_id');
             while (replyRows.length > 0) {
               const row = replyRows.shift();
               for (const comment of comments) {
@@ -117,7 +121,6 @@ export async function getPostById(req: Request, res: Response) {
         }
       }
     }
-    post._links = { self: `/api/posts/${postId}` };
 
     body.post = post;
     res.status(200).send(body);
@@ -129,7 +132,7 @@ export async function postPostComment(req: Request, res: Response) {
   const { postId } = req.params;
   const { userId, content } = req.body;
 
-  pool.query(queries.postPostsComment, [postId, userId, content])
+  execute(queries.postPostsComment, [postId, userId, content])
         .then((result) => {
           const body: any = {};
           const { id, created_at: createdAt } = result.rows[0];
@@ -139,7 +142,7 @@ export async function postPostComment(req: Request, res: Response) {
             post: `/api/posts/${postId}`,
             user: `/api/users/${userId}`,
           };
-          res.status(200).send(body);
+          res.status(201).send(body);
         })
         .catch((err) => {
           console.log(err);
