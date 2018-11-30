@@ -69,10 +69,14 @@ In order to successfully upload the image and deploy it, a service account must 
 
 When `npm start` is called, the `prestart` script is called initially which first checks if the code has been formatted properly using `tslint`. If that fails the process stops here. Otherwise the actually artifacts for the frontend and backend are built, the server artifact is started which in turn serves up the frontend artifact.
 
+Note:
+
+As of right now, to run `npm start` locally, you must first change the file being copied in the `build` command of the `./client/package.json` from `config/production.env` to `config/local.env`. The prior of the two is generated in the CircleCI pipeline.
+
 ---
 ## Documentation
 The OpenAPI specification can be viewed at: 
 
 ```
-http//localhost:8080/api/docs
+http://localhost:8080/api/docs
 ```
