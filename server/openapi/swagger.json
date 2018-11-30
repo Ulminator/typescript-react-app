@@ -1,0 +1,209 @@
+{
+  "swagger": "2.0",
+  "x-google-allow": "all",
+  "info": {
+    "title": "Typescript React App",
+    "version": "v1",
+    "description": "Full stack Node.js application on App Engine using CircleCI.",
+  },
+  "schemes": ["https"],
+  "paths": {
+    "/api/users/${userId}": {
+      "post": {
+        "operationId": "create-post",
+        "tags": ["user-resource"],
+        "description": "Provide a title, imageId, and content of a comment to create a post.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+              "name": "title",
+              "in": "body",
+              "required": true,
+              "type": "string"
+          },
+          {
+            "name": "imageId",
+            "in": "body",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "in": "body",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Post Created"
+          },
+          "500": {
+            "description": "Query Error"
+          }
+        }
+      }
+    },
+    "/api/posts/${postId}/comment": {
+      "post": {
+        "operationId": "create-comment",
+        "tags": ["post-resource"],
+        "description": "Provide a userId and the content of a comment to create a comment.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "in": "body",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Comment Created"
+          },
+          "500": {
+            "description": "Query Error"
+          }
+        }
+      }
+    },
+    "/api/posts": {
+      "get": {
+        "operationId": "get-posts",
+        "tags": ["post-resource"],
+        "description": "Get all posts.",
+        "parameters": [
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Can be any comma separated combination of id,title,image_id,created_at"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "All posts found and returned."
+          },
+          "404": {
+            "description": "No posts exist."
+          }
+        }
+      }
+    },
+    "/api/comments/${commentId}/reply": {
+      "post": {
+        "operationId": "create-reply",
+        "tags": ["comment-resource"],
+        "description": "Provide a userId and the content of a reply to create a reply.",
+        "parameters": [
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "content",
+            "in": "body",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Reply Created"
+          },
+          "500": {
+            "description": "Query Error"
+          }
+        }
+      }
+    },
+    "/api/comments/:commentId": {
+      "get": {
+        "operationId": "get-comment",
+        "tags": ["comment-resource"],
+        "description": "Provide a comment id to get information about that comment. \nOptions for include: any combination of title, content",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Can be any comma separated combination of id,content,created_at"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Can be any comma separated combination of user,replies"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Comment found and returned."
+          },
+          "404": {
+            "description": "Comment with that ID does not exist."
+          }
+        }
+      }
+    },
+    "/api/replies/:replyId": {
+      "get": {
+        "operationId": "get-reply",
+        "tags": ["reply-resource"],
+        "description": "Provide a reply id to get information about that reply. \nOptions for include: any combination of title, content",
+        "parameters": [
+          {
+            "name": "replyId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "include",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Can be any comma separated values of id,content,created_at"
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "description": "Can only be user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Reply found and returned."
+          },
+          "404": {
+            "description": "Reply with that ID does not exist."
+          }
+        }
+      }
+    }
+  }
+ }

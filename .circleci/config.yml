@@ -9,7 +9,6 @@ jobs:
       - image: circleci/postgres:9.6-alpine-ram
 
     steps:
-      - run: ls
       - checkout
 
       - run:
