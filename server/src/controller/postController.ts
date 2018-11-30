@@ -99,20 +99,25 @@ export async function getPostById(req: Request, res: Response) {
 
             const { rows: replyRows } = await execute(query, commentIds);
 
-            omittedArr.push('comment_id');
-            while (replyRows.length > 0) {
-              const row = replyRows.shift();
-              for (const comment of comments) {
-                if (comment.id !== row.comment_id && comment.replies === undefined) {
-                  comment.replies = [];
-                  break;
-                }
-                if (comment.id === row.comment_id) {
-                  if (comment.replies === undefined) { comment.replies = []; }
-                  const omitted = _.omit(row, omittedArr);
-                  const reply = _.mapKeys(omitted, (value, key) => _.camelCase(key));
-                  reply.user = generateUser(row);
-                  comment.replies.push(reply);
+            if (replyRows.length === 0) {
+              comments.forEach(comment => comment.replies = []);
+            } else {
+              omittedArr.push('comment_id');
+              while (replyRows.length > 0) {
+                const row = replyRows.shift();
+                for (const comment of comments) {
+                  if (comment.id !== row.comment_id && comment.replies === undefined) {
+                    console.log('in it');
+                    comment.replies = [];
+                    break;
+                  }
+                  if (comment.id === row.comment_id) {
+                    if (comment.replies === undefined) { comment.replies = []; }
+                    const omitted = _.omit(row, omittedArr);
+                    const reply = _.mapKeys(omitted, (value, key) => _.camelCase(key));
+                    reply.user = generateUser(row);
+                    comment.replies.push(reply);
+                  }
                 }
               }
             }

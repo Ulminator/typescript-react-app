@@ -5,7 +5,6 @@ import * as queries from '../pg/queries';
 export async function postUsersPost(req: Request, res: Response) {
 
   const { userId } = req.params;
-
   const { title, imageId, content }: { title: string, imageId: string, content: string } = req.body;
 
   try {
