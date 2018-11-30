@@ -4,7 +4,7 @@
   "info": {
     "title": "Typescript React App",
     "version": "v1",
-    "description": "Full stack Node.js application on App Engine using CircleCI.",
+    "description": "Full stack Node.js application on App Engine using CircleCI."
   },
   "schemes": ["https"],
   "paths": {

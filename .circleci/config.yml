@@ -39,7 +39,7 @@ jobs:
           name: Build Docker Image
           command: |
             echo ${GOOGLE_AUTH} > ${HOME}/gcp-key.json
-            mkdir ${HOME}/project/client/config
+            # mkdir ${HOME}/project/client/config
             echo ${REACT_ENV_VARS} > ${HOME}/project/client/config/production.env
             SERVER_ENV_VARS="INSTANCE_CONNECTION_NAME=$INSTANCE_CONNECTION_NAME\nPG_DATABASE=$PG_DATABASE\nPG_PASSWORD=$PG_PASSWORD\nPG_USER=$PG_USER"
             echo -e ${SERVER_ENV_VARS} > ${HOME}/project/server/.env
