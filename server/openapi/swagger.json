@@ -8,33 +8,34 @@
   },
   "schemes": ["https"],
   "paths": {
-    "/api/users/${userId}": {
+    "/api/users/{userId}/post": {
       "post": {
         "operationId": "create-post",
         "tags": ["user-resource"],
-        "description": "Provide a title, imageId, and content of a comment to create a post.",
+        "consumes": "x-www-form-urlencoded",
+        "description": "Provide a post title, imageId, and content of a comment to create a post for user ID.",
         "parameters": [
           {
             "name": "userId",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "number"
           },
           {
               "name": "title",
-              "in": "body",
+              "in": "formData",
               "required": true,
               "type": "string"
           },
           {
             "name": "imageId",
-            "in": "body",
+            "in": "formData",
             "required": true,
             "type": "string"
           },
           {
             "name": "content",
-            "in": "body",
+            "in": "formData",
             "required": true,
             "type": "string"
           }
@@ -49,21 +50,27 @@
         }
       }
     },
-    "/api/posts/${postId}/comment": {
+    "/api/posts/{postId}/comment": {
       "post": {
         "operationId": "create-comment",
         "tags": ["post-resource"],
         "description": "Provide a userId and the content of a comment to create a comment.",
         "parameters": [
           {
-            "name": "userId",
+            "name": "postId",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
+            "name": "userId",
+            "in": "formData",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "content",
-            "in": "body",
+            "in": "formData",
             "required": true,
             "type": "string"
           }
@@ -88,8 +95,13 @@
             "name": "include",
             "in": "query",
             "required": false,
-            "type": "string",
-            "description": "Can be any comma separated combination of id,title,image_id,created_at"
+            "type": "array",
+            "items": {
+              "type": "string",
+              "required": false,
+              "enum": ["id", "title", "image_id", "created_at"]
+            },
+            "description": "Only includes these attributes of the post in the query."
           }
         ],
         "responses": {
@@ -102,21 +114,69 @@
         }
       }
     },
-    "/api/comments/${commentId}/reply": {
-      "post": {
-        "operationId": "create-reply",
-        "tags": ["comment-resource"],
-        "description": "Provide a userId and the content of a reply to create a reply.",
+    "/api/posts/{postId}": {
+      "get": {
+        "operationId": "get-post",
+        "tags": ["post-resource"],
+        "description": "Gets a post by post id.",
         "parameters": [
           {
-            "name": "userId",
+            "name": "postId",
             "in": "path",
             "required": true,
             "type": "string"
           },
           {
+            "name": "include",
+            "in": "query",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "required": false,
+              "enum": ["id", "title", "image_id", "created_at"]
+            },
+            "description": "Only includes these attributes of the post in the query."
+          },
+          {
+            "name": "expand",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "enum": ["comments"],
+            "description": "Deeply expands the comment section including replies."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Post found and returned."
+          },
+          "404": {
+            "description": "Post with that ID does not exist."
+          }
+        }
+      }
+    },
+    "/api/comments/{commentId}/reply": {
+      "post": {
+        "operationId": "create-reply",
+        "tags": ["comment-resource"],
+        "description": "Creates a reply by userId and content of the reply for comment id.",
+        "parameters": [
+          {
+            "name": "commentId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "userId",
+            "in": "formData",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "content",
-            "in": "body",
+            "in": "formData",
             "required": true,
             "type": "string"
           }
@@ -131,15 +191,15 @@
         }
       }
     },
-    "/api/comments/:commentId": {
+    "/api/comments/{commentId}": {
       "get": {
         "operationId": "get-comment",
         "tags": ["comment-resource"],
-        "description": "Provide a comment id to get information about that comment. \nOptions for include: any combination of title, content",
+        "description": "Gets a comment by comment ID.",
         "parameters": [
           {
             "name": "commentId",
-            "in": "query",
+            "in": "path",
             "required": true,
             "type": "string"
           },
@@ -147,15 +207,25 @@
             "name": "include",
             "in": "query",
             "required": false,
-            "type": "string",
-            "description": "Can be any comma separated combination of id,content,created_at"
+            "type": "array",
+            "items": {
+              "type": "string",
+              "required": false,
+              "enum": ["id", "content", "created_at"]
+            },
+            "description": "Only includes these attributes of the comment in the query."
           },
           {
             "name": "expand",
             "in": "query",
             "required": false,
-            "type": "string",
-            "description": "Can be any comma separated combination of user,replies"
+            "type": "array",
+            "items": {
+              "type": "string",
+              "required": false,
+              "enum": ["user", "replies"]
+            },
+            "description": "Deeply expands the replies section and/or expands the user of the comment."
           }
         ],
         "responses": {
@@ -168,11 +238,11 @@
         }
       }
     },
-    "/api/replies/:replyId": {
+    "/api/replies/{replyId}": {
       "get": {
         "operationId": "get-reply",
         "tags": ["reply-resource"],
-        "description": "Provide a reply id to get information about that reply. \nOptions for include: any combination of title, content",
+        "description": "Gets a reply by reply ID.",
         "parameters": [
           {
             "name": "replyId",
@@ -184,15 +254,21 @@
             "name": "include",
             "in": "query",
             "required": false,
-            "type": "string",
-            "description": "Can be any comma separated values of id,content,created_at"
+            "type": "array",
+            "items": {
+              "type": "string",
+              "required": false,
+              "enum": ["id", "content", "created_at"]
+            },
+            "description": "Only includes the attributes of the reply in the query."
           },
           {
             "name": "expand",
             "in": "query",
             "required": false,
             "type": "string",
-            "description": "Can only be user"
+            "enum": ["user"],
+            "description": "Deeply expands the user section including reply."
           }
         ],
         "responses": {
